@@ -1,118 +1,104 @@
-import animal.birds.IFlying;
-import data.AnimalTypeData;
-import data.CommandsData;
-import animal.AbsAnimal;
-import factory.Factory;
+import data.Curator;
+import data.Group;
+import data.Student;
+import db.IDBExecutor;
+import db.MySqlExecutor;
+import tables.AbsTable;
+import tables.CuratorTable;
+import tables.GroupTable;
+import tables.StudentTable;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-
-import static java.lang.System.*;
 
 public class Runner {
 
-    private final static Scanner scanner = new Scanner(in);
+  public static void main(String... args) throws SQLException {
+    IDBExecutor dbExecutor = new MySqlExecutor();
+    try {
+      AbsTable studentTable = new StudentTable(dbExecutor);
+      if (studentTable.isTableExist("student")) {
+        studentTable.delete();
+      }
 
-    public static void main(String... args) {
-        List<AbsAnimal> animals = new ArrayList<>();
-        while (true) {
-            String commandsStr = "";
-            do {
-                out.println("введите команду add/list/exit");
-                commandsStr = scanner.next().toUpperCase().trim();
-            } while (!commandsStr.equals("ADD") && !commandsStr.equals("LIST") && !commandsStr.equals("EXIT"));
+      AbsTable curatorTable = new CuratorTable(dbExecutor);
+      if (curatorTable.isTableExist("curator")) {
+        curatorTable.delete();
 
-            CommandsData commandsData = CommandsData.valueOf(commandsStr);
-            switch (commandsData) {
-                case ADD -> {
-                    String animalTypeStr = "";
-                    do {
-                        out.println("введите тип животного cat,dog,duck");
-                        animalTypeStr = scanner.next().toUpperCase().trim();
-                    } while (!animalTypeStr.equals("CAT") && !animalTypeStr.equals("DOG") && !animalTypeStr.equals("DUCK"));
+      }
 
+      AbsTable groupTable = new GroupTable(dbExecutor);
+      if (groupTable.isTableExist("students_group")) {
+        groupTable.delete();
+      }
 
-                    AnimalTypeData animalTypeData = AnimalTypeData.valueOf(animalTypeStr);
-                    Factory factory = new Factory();
+      {
+        List<String> columnsStudentTable = new ArrayList<>();
+        columnsStudentTable.add("id int primary key");
+        columnsStudentTable.add("name varchar(50)");
+        columnsStudentTable.add("age int");
+        columnsStudentTable.add("sex varchar(10)");
 
-                    AbsAnimal absAnimal = factory.create(animalTypeData);
-
-                    if (absAnimal instanceof IFlying) {
-                        ((IFlying) absAnimal).fly();
-                    }
+        studentTable.create(columnsStudentTable);
 
 
-                    animals.add(fillAnimalData(absAnimal));
-                }
-                case LIST -> animals.forEach((AbsAnimal animal) -> System.out.println(animal.toString()));
-                case EXIT -> exit(0);
-            }
+        List<String> columnsGroupTable = new ArrayList<>();
+        columnsGroupTable.add("id int primary key");
+        columnsGroupTable.add("name varchar(50)");
+        columnsGroupTable.add("id_curator int");
 
-        }
+
+        groupTable.create(columnsGroupTable);
+
+
+        List<String> columnsCuratorTable = new ArrayList<>();
+        columnsCuratorTable.add("id int primary key");
+        columnsCuratorTable.add("name varchar(50)");
+
+        curatorTable.create(columnsCuratorTable);
+      }
+     StudentTable students = new StudentTable(dbExecutor);
+      students.insert(new Student(1, "tim", 20, "Male"));
+        students.insert(new Student(2, "bin", 22, "Female"));
+        students.insert(new Student(3, "bum", 22, "Male"));
+        students.insert(new Student(4, "kum", 23, "Male"));
+        students.insert(new Student(5, "trun", 24, "Female"));
+        students.insert(new Student(6, "bam", 21, "Male"));
+        students.insert(new Student(7, "den", 22, "Male"));
+        students.insert(new Student(8, "jen", 33, "Female"));
+        students.insert(new Student(9, "kim", 22, "Male"));
+        students.insert(new Student(10, "wat", 22, "Male"));
+        students.insert(new Student(11, "kat", 59, "Female"));
+        students.insert(new Student(12, "yat", 22, "Female"));
+        students.insert(new Student(13, "mat", 22, "Male"));
+        students.insert(new Student(14, "kok", 33, "Male"));
+        students.insert(new Student(15, "sok", 27, "Male"));
+
+
+
+
+      CuratorTable curators = new CuratorTable(dbExecutor);
+      curators.insert(new Curator(1, "BOB"));
+        curators.insert(new Curator(2, "Jack"));
+        curators.insert(new Curator(3, "Tangina"));
+        curators.insert(new Curator(4, "Bobo"));
+
+      GroupTable groups = new GroupTable(dbExecutor);
+      groups.insert (new Group(1, "kaa", 10));
+        groups.insert (new Group(2, "maa", 11));
+        groups.insert (new Group(3, "baa", 12));
+
+
+
+
+
+
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }finally
+      {
+        dbExecutor.close();
+      }
     }
-
-    private static AbsAnimal fillAnimalData(AbsAnimal animal) {
-        System.out.println("Введите имя животного");
-        String name = scanner.next();
-        animal.setName(name);
-
-        // Ввод и проверка возраста
-        int age = 0;
-        boolean isAgeValid = false;
-        while (!isAgeValid) {
-            System.out.println("Введите возраст животного");
-            String ageStr = scanner.next();
-            try {
-                age = Integer.parseInt(ageStr);
-                if (age < 0) {
-                    System.out.println("Вы ввели отрицательный возраст!");
-                } else {
-                    isAgeValid = true;
-                }
-            } catch (NumberFormatException exception) {
-                System.out.println("Вы ввели неверный возраст!");
-            }
-        }
-        animal.setAge(age);
-
-
-        int weight = 0;
-        boolean isWeightValid = false;
-        while (!isWeightValid) {
-            System.out.println("Введите вес животного");
-            String weightStr = scanner.next();
-            try {
-                weight = Integer.parseInt(weightStr);
-                if (weight < 0) {
-                    System.out.println("Вы ввели отрицательный вес!");
-                } else {
-
-
-                isWeightValid = true;}
-            } catch (NumberFormatException exception) {
-                System.out.println("Вы ввели неверный вес!");
-            }
-        }
-        animal.setWeight(weight);
-
-
-        String colorStr = null;
-        boolean isColorValid = false;
-        while (!isColorValid) {
-            System.out.println("Введите цвет животного");
-            colorStr = scanner.next();
-            if (colorStr.matches(".*\\d.*")) {
-                System.out.println("Введите цвет буквами!");
-                continue;
-            }
-            isColorValid = true;
-        }
-        animal.setColor(colorStr);
-
-
-        return animal;
-    }
-}
-
-
+  }
